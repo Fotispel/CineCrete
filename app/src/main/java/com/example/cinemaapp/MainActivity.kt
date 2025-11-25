@@ -24,12 +24,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
+import com.example.cinemaapp.data.UserPreferences
 import com.example.cinemaapp.ui.screens.NowPlayingScreen
 import com.example.cinemaapp.ui.screens.ComingSoonScreen
 import com.example.cinemaapp.ui.screens.MoviePage
@@ -37,8 +39,9 @@ import com.example.cinemaapp.ui.theme.CinemaAppTheme
 import com.example.cinemaapp.viewmodel.MovieViewModel
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import kotlinx.coroutines.flow.first
 
 // Data class για τα Bottom Navigation Items
 data class BottomNavigationItem(
@@ -72,8 +75,39 @@ class MainActivity : ComponentActivity() {
         setContent {
             CinemaAppTheme {
                 val navController = rememberNavController()
+                val context = LocalContext.current
+                val userPreferences = remember { UserPreferences(context.applicationContext) }
+                val selectedCinema by movieViewModel.selectedCinema.collectAsState()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
+
+                LaunchedEffect(Unit) {
+                    val persistedCinema = userPreferences.lastCinema.first()
+                    movieViewModel.selectCinema(persistedCinema)
+
+                    val persistedRoute = userPreferences.lastRoute.first()
+                    if (persistedRoute != "now_playing") {
+                        navController.navigate(persistedRoute) {
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                }
+
+                LaunchedEffect(selectedCinema) {
+                    if (selectedCinema.isNotEmpty()) {
+                        userPreferences.saveLastCinema(selectedCinema)
+                    }
+                }
+
+                LaunchedEffect(currentRoute) {
+                    if (currentRoute in listOf("now_playing", "coming_soon")) {
+                        userPreferences.saveLastRoute(currentRoute!!)
+                    }
+                }
 
                 val items = listOf(
                     BottomNavigationItem(
@@ -210,7 +244,8 @@ fun CinemaTopBar(movieViewModel: MovieViewModel) {
     var expanded by rememberSaveable { mutableStateOf(false) }
 
     val selectedCinema by movieViewModel.selectedCinema.collectAsState()
-    val currentCinemaDisplay = cinemaDisplayMap[selectedCinema] ?: selectedCinema
+    val resolvedCinema = selectedCinema.ifBlank { UserPreferences.DEFAULT_CINEMA }
+    val currentCinemaDisplay = cinemaDisplayMap[resolvedCinema] ?: resolvedCinema
 
     val ubuntuMedium = FontFamily(Font(R.font.ubuntu_medium, weight = FontWeight.W500))
 

@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class MovieViewModel(initialCinema: String = "Odeon") : ViewModel() {
+class MovieViewModel : ViewModel() {
 
     private val repository = MovieRepository()
 
@@ -27,15 +27,12 @@ class MovieViewModel(initialCinema: String = "Odeon") : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
-    private val _selectedCinema = MutableStateFlow(initialCinema)
+    private val _selectedCinema = MutableStateFlow("")
     val selectedCinema: StateFlow<String> = _selectedCinema
-
-    init {
-        fetchAllMovies(initialCinema)
-    }
 
 
     fun selectCinema(cinema: String) {
+        if (_selectedCinema.value == cinema) return
         _selectedCinema.value = cinema
 
         _nowPlayingMovies.value = emptyList()
