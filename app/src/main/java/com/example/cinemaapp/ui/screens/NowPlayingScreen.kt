@@ -55,7 +55,7 @@ fun NowPlayingScreen(
             ) {
                 items(
                     nowPlayingMovies,
-                    key = { movie -> movie.basicInfo.posterUrl.ifEmpty { movie.basicInfo.title } },
+                    key = { movie -> movie.basicInfo.title },
                     contentType = { _ -> "movie" }
                 ) { movie ->
                     MovieQuickViewItem(

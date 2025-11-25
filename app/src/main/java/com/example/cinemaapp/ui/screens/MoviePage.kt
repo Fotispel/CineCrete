@@ -76,7 +76,8 @@ fun MoviePage(movieUrl: String, navController: NavController, viewModel: MovieVi
                     containerColor = Color.Transparent,
                     scrolledContainerColor = Color.Transparent
                 ),
-                scrollBehavior = scrollBehavior
+                scrollBehavior = scrollBehavior,
+                windowInsets = WindowInsets(0.dp)
             )
         },
         contentWindowInsets = WindowInsets(0.dp),

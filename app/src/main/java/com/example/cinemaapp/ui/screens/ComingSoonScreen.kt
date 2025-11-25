@@ -46,7 +46,6 @@ fun ComingSoonScreen(
     Box(modifier = modifier.fillMaxSize()) {
         when {
             isLoading -> {
-                // Εμφάνιση loading indicator όταν φορτώνει
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center)
                 )
@@ -71,7 +70,7 @@ fun ComingSoonScreen(
                     items(
                         comingSoonMovies,
                         key = { movie ->
-                            movie.basicInfo.posterUrl.ifEmpty { movie.basicInfo.title }
+                            movie.basicInfo.title
                         },
                         contentType = { _ -> "movie" }
                     ) { movie ->
